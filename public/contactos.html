@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lista de Contactos</title>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <nav class="navbar">
+    <a href="index.html">Tareas</a>
+    <a href="contactos.html" class="activo">Contactos</a>
+  </nav>
+
+  <main class="container">
+    <h1>Lista de Contactos</h1>
+
+    <form id="contact-form" class="input-group columna">
+      <input id="contact-nombre" type="text" placeholder="Nombre" />
+      <input id="contact-apellido" type="text" placeholder="Apellido" />
+      <input id="contact-telefono" type="tel" placeholder="Teléfono" />
+      <input id="contact-ciudad" type="text" placeholder="Ciudad" />
+      <button id="btn-guardar" type="submit">Guardar contacto</button>
+      <button id="btn-cancelar" type="button" class="btn-secondary" hidden>Cancelar edición</button>
+    </form>
+    <p id="mensaje" class="mensaje"></p>
+
+    <div id="contact-list"></div>
+  </main>
+
+  <script src="js/contactos.js"></script>
+</body>
+</html>

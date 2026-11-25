@@ -1,0 +1,140 @@
+/* ===== Estilos compartidos: Tareas + Contactos ===== */
+* {
+  box-sizing: border-box;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background-color: #f4f7f6;
+  color: #333;
+}
+
+/* Barra de navegación entre las dos listas */
+.navbar {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  padding: 14px 16px;
+  background: #222;
+}
+
+.navbar a {
+  color: #ddd;
+  text-decoration: none;
+  font-weight: 600;
+  padding: 8px 14px;
+  border-radius: 6px;
+}
+
+.navbar a:hover { background: #3a3a3a; color: #fff; }
+.navbar a.activo { background: #fff; color: #222; }
+
+.container {
+  background: #fff;
+  margin: 40px auto;
+  padding: 25px;
+  border-radius: 10px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  width: calc(100% - 32px);
+  max-width: 520px;
+}
+
+h1 {
+  text-align: center;
+  margin-top: 0;
+}
+
+.input-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+.input-group.columna { flex-direction: column; }
+
+input[type="text"],
+input[type="tel"],
+input[type="date"] {
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  font-size: 15px;
+}
+
+.input-group input[type="text"] { flex: 1; min-width: 160px; }
+
+button {
+  padding: 10px 15px;
+  background-color: #28a745;
+  color: #fff;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+button:hover { background-color: #218838; }
+
+.btn-edit { background-color: #ffc107; color: #000; }
+.btn-edit:hover { background-color: #e0a800; }
+.btn-delete { background-color: #dc3545; }
+.btn-delete:hover { background-color: #b02a37; }
+.btn-secondary { background-color: #6c757d; }
+.btn-secondary:hover { background-color: #5a6268; }
+
+.mensaje {
+  min-height: 1.2em;
+  margin: -10px 0 12px;
+  font-size: 14px;
+  color: #dc3545;
+}
+
+.vacio { text-align: center; color: #888; }
+
+/* ===== Lista de tareas ===== */
+.todo-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  padding: 10px;
+  border-bottom: 1px solid #eee;
+}
+
+.todo-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  min-width: 0;
+}
+
+.todo-info span { overflow-wrap: anywhere; }
+.todo-fecha { color: #888; font-size: 13px; white-space: nowrap; }
+
+.completed {
+  text-decoration: line-through;
+  color: #888;
+}
+
+.actions { display: flex; gap: 5px; }
+.actions button { padding: 5px 8px; font-size: 12px; }
+
+/* ===== Lista de contactos ===== */
+.contact-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 15px;
+  margin-bottom: 10px;
+  border-radius: 8px;
+  background: #fafafa;
+  border: 1px solid #eee;
+}
+
+.contact-info strong { display: block; font-size: 16px; }
+.contact-info span { font-size: 13px; color: #666; }
