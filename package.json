@@ -4,13 +4,24 @@
   "description": "Taller DOM + API REST con Node.js y Express: lista de tareas y lista de contactos",
   "main": "src/server.js",
   "scripts": {
+    "test": "node --test --test-concurrency=1 \"tests/*.test.js\"",
     "start": "node src/server.js",
-    "dev": "nodemon src/server.js"
+    "dev": "nodemon src/server.js",
+    "sql": "node --no-warnings scripts/sql-playground.js"
   },
   "nodemonConfig": {
-    "ignore": ["data/*", "public/*"]
+    "ignore": [
+      "data/*",
+      "public/*"
+    ]
   },
-  "keywords": ["express", "api", "dom", "todo", "contactos"],
+  "keywords": [
+    "express",
+    "api",
+    "dom",
+    "todo",
+    "contactos"
+  ],
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
@@ -18,5 +29,8 @@
   },
   "devDependencies": {
     "nodemon": "^3.1.10"
+  },
+  "engines": {
+    "node": ">=22.13"
   }
 }
