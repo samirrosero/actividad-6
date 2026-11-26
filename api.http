@@ -1,0 +1,253 @@
+# =====================================================================
+#  Pruebas de la API de Tareas y Contactos
+#  Requiere la extensión "REST Client" de VS Code.
+#  1. Inicia el servidor:  npm run dev
+#  2. Pulsa "Send Request" encima de cada petición.
+#  Las peticiones con "# @name" guardan la respuesta para reutilizar el id
+#  (ej. {{crearTarea.response.body.id}}). Ejecuta primero la de crear.
+# =====================================================================
+
+@base = http://localhost:3000
+@json = application/json
+
+
+#######################################################################
+#  TAREAS
+#######################################################################
+
+### ✅ Listar tareas → 200 + arreglo
+GET {{base}}/tareas
+
+### ✅ Crear tarea → 201
+# @name crearTarea
+POST {{base}}/tareas
+Content-Type: {{json}}
+
+{
+  "titulo": "Estudiar códigos de estado HTTP",
+  "fecha": "2026-11-29"
+}
+
+### ✅ Obtener la tarea creada → 200
+GET {{base}}/tareas/{{crearTarea.response.body.id}}
+
+### ✅ Marcar como completada → 200 (el título no cambia)
+PUT {{base}}/tareas/{{crearTarea.response.body.id}}
+Content-Type: {{json}}
+
+{
+  "completada": true
+}
+
+### ✅ Cambiar el título → 200
+PUT {{base}}/tareas/{{crearTarea.response.body.id}}
+Content-Type: {{json}}
+
+{
+  "titulo": "Repasar códigos de estado HTTP"
+}
+
+### ✅ Eliminar la tarea creada → 204 sin cuerpo
+DELETE {{base}}/tareas/{{crearTarea.response.body.id}}
+
+
+### ❌ Tarea que no existe → 404
+GET {{base}}/tareas/999999
+
+### ❌ Id que no es número → 404 (Number("1abc") es NaN)
+GET {{base}}/tareas/1abc
+
+### ❌ Crear sin título → 400
+POST {{base}}/tareas
+Content-Type: {{json}}
+
+{}
+
+### ❌ POST sin body (Paso 0.2) → 400, no 500
+POST {{base}}/tareas
+
+### ❌ Título que no es texto → 400
+POST {{base}}/tareas
+Content-Type: {{json}}
+
+{
+  "titulo": 123
+}
+
+### ❌ Título vacío → 400
+POST {{base}}/tareas
+Content-Type: {{json}}
+
+{
+  "titulo": "   "
+}
+
+### ❌ Fecha con formato incorrecto → 400
+POST {{base}}/tareas
+Content-Type: {{json}}
+
+{
+  "titulo": "Tarea con fecha mala",
+  "fecha": "29/11/2026"
+}
+
+### ❌ JSON mal escrito → 400
+POST {{base}}/tareas
+Content-Type: {{json}}
+
+{ "titulo": "sin cerrar"
+
+### ❌ completada que no es booleano → 400
+PUT {{base}}/tareas/1
+Content-Type: {{json}}
+
+{
+  "completada": "si"
+}
+
+### ❌ Actualizar tarea que no existe → 404
+PUT {{base}}/tareas/999999
+Content-Type: {{json}}
+
+{
+  "titulo": "Nada"
+}
+
+### ❌ Eliminar tarea que no existe → 404
+DELETE {{base}}/tareas/999999
+
+### ❌ DELETE con id inválido → 404 (con parseInt borraría la tarea 1)
+DELETE {{base}}/tareas/1abc
+
+
+#######################################################################
+#  CONTACTOS
+#######################################################################
+
+### ✅ Listar contactos → 200 + arreglo (mínimo 3 de ejemplo)
+GET {{base}}/contactos
+
+### ✅ Crear contacto completo → 201
+# @name crearContacto
+POST {{base}}/contactos
+Content-Type: {{json}}
+
+{
+  "nombre": "Valentina",
+  "apellido": "Torres",
+  "telefono": "3125550101",
+  "email": "valentina@correo.com",
+  "ciudad": "Cali"
+}
+
+### ✅ Crear contacto solo con los obligatorios → 201 (el id del body se ignora)
+POST {{base}}/contactos
+Content-Type: {{json}}
+
+{
+  "id": 500,
+  "nombre": "Mateo",
+  "telefono": "4445566"
+}
+
+### ✅ Obtener el contacto creado → 200
+GET {{base}}/contactos/{{crearContacto.response.body.id}}
+
+### ✅ Actualizar ciudad y teléfono → 200
+PUT {{base}}/contactos/{{crearContacto.response.body.id}}
+Content-Type: {{json}}
+
+{
+  "ciudad": "Palmira",
+  "telefono": "3109876543"
+}
+
+### ✅ Eliminar el contacto creado → 204
+DELETE {{base}}/contactos/{{crearContacto.response.body.id}}
+
+
+### ❌ Contacto que no existe → 404
+GET {{base}}/contactos/999999
+
+### ❌ Crear sin nombre → 400
+POST {{base}}/contactos
+Content-Type: {{json}}
+
+{
+  "telefono": "3001234567"
+}
+
+### ❌ Crear sin teléfono → 400
+POST {{base}}/contactos
+Content-Type: {{json}}
+
+{
+  "nombre": "Sin teléfono"
+}
+
+### ❌ Teléfono muy corto → 400
+POST {{base}}/contactos
+Content-Type: {{json}}
+
+{
+  "nombre": "Prueba",
+  "telefono": "12"
+}
+
+### ❌ Teléfono con letras → 400
+POST {{base}}/contactos
+Content-Type: {{json}}
+
+{
+  "nombre": "Prueba",
+  "telefono": "300abc4567"
+}
+
+### ❌ Teléfono como número y no como texto → 400
+POST {{base}}/contactos
+Content-Type: {{json}}
+
+{
+  "nombre": "Prueba",
+  "telefono": 3001234567
+}
+
+### ❌ Email sin @ → 400
+POST {{base}}/contactos
+Content-Type: {{json}}
+
+{
+  "nombre": "Prueba",
+  "telefono": "3001234567",
+  "email": "correo.com"
+}
+
+### ❌ POST sin body → 400
+POST {{base}}/contactos
+
+### ❌ Actualizar con nombre vacío → 400
+PUT {{base}}/contactos/1
+Content-Type: {{json}}
+
+{
+  "nombre": ""
+}
+
+### ❌ Actualizar contacto que no existe → 404
+PUT {{base}}/contactos/999999
+Content-Type: {{json}}
+
+{
+  "ciudad": "Cali"
+}
+
+### ❌ Eliminar contacto que no existe → 404
+DELETE {{base}}/contactos/999999
+
+
+#######################################################################
+#  OTROS
+#######################################################################
+
+### ❌ Ruta inexistente → 404 en JSON
+GET {{base}}/no-existe
