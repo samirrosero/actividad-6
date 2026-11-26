@@ -1,5 +1,5 @@
 // ===== Lista de tareas: manipulación del DOM + consumo de la API =====
-const API_URL = '/api/tareas';
+const API_URL = '/tareas';
 let tareas = [];
 
 const form = document.getElementById('todo-form');
