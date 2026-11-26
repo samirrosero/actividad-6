@@ -1,53 +1,47 @@
 // Modelo de tareas: el ÚNICO lugar que lee y escribe los datos de tareas.
-// No conoce req ni res. Las funciones son async para que, al cambiar el
-// almacenamiento (por ejemplo a una base de datos), el controlador no cambie.
-const { cargar, guardar, siguienteId } = require('./archivo-json');
+// Ahora usa SQLite. Tiene las MISMAS funciones, parámetros y retornos que la
+// versión anterior (archivos JSON), por eso el controlador no cambió.
+// Todas las consultas usan ? para evitar la inyección SQL.
+const db = require('../db/connection');
 
-const ARCHIVO = 'tareas.json';
-
-let tareas = cargar(ARCHIVO, [
-  { id: 1, titulo: 'Aprender Express', fecha: '2026-11-25', completada: false },
-  { id: 2, titulo: 'Crear una API REST', fecha: '2026-11-25', completada: true },
-  { id: 3, titulo: 'Conectar una base de datos', fecha: '', completada: false }
-]);
-let proximoId = siguienteId(tareas);
+// SQLite guarda completada como 0/1; la API responde true/false
+function aTarea(fila) {
+  if (!fila) return null;
+  return { id: fila.id, titulo: fila.titulo, fecha: fila.fecha, completada: fila.completada === 1 };
+}
 
 async function obtenerTodas() {
-  return tareas;
+  return db.prepare('SELECT * FROM tareas ORDER BY id').all().map(aTarea);
 }
 
 async function obtenerPorId(id) {
-  return tareas.find((t) => t.id === id) ?? null;
+  return aTarea(db.prepare('SELECT * FROM tareas WHERE id = ?').get(id));
 }
 
 async function crear({ titulo, fecha = '' }) {
-  const nueva = { id: proximoId++, titulo, fecha, completada: false };
-  tareas.push(nueva);
-  guardar(ARCHIVO, tareas);
-  return nueva;
+  const resultado = db.prepare('INSERT INTO tareas (titulo, fecha) VALUES (?, ?)').run(titulo, fecha);
+  return obtenerPorId(Number(resultado.lastInsertRowid));
 }
 
 // Devuelve la tarea actualizada, o null si no existe
 async function actualizar(id, { titulo, fecha, completada }) {
-  const tarea = tareas.find((t) => t.id === id);
-  if (!tarea) return null;
+  const actual = await obtenerPorId(id);
+  if (!actual) return null;
 
   // ?? conserva el valor actual si el campo no se envió
-  tarea.titulo = titulo ?? tarea.titulo;
-  tarea.fecha = fecha ?? tarea.fecha;
-  tarea.completada = completada ?? tarea.completada;
-
-  guardar(ARCHIVO, tareas);
-  return tarea;
+  db.prepare('UPDATE tareas SET titulo = ?, fecha = ?, completada = ? WHERE id = ?').run(
+    titulo ?? actual.titulo,
+    fecha ?? actual.fecha,
+    (completada ?? actual.completada) ? 1 : 0, // booleano → 0/1
+    id
+  );
+  return obtenerPorId(id);
 }
 
 // Devuelve true si la eliminó, false si no existía
 async function eliminar(id) {
-  const indice = tareas.findIndex((t) => t.id === id);
-  if (indice === -1) return false;
-  tareas.splice(indice, 1);
-  guardar(ARCHIVO, tareas);
-  return true;
+  const resultado = db.prepare('DELETE FROM tareas WHERE id = ?').run(id);
+  return resultado.changes > 0;
 }
 
 module.exports = { obtenerTodas, obtenerPorId, crear, actualizar, eliminar };
