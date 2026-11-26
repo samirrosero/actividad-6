@@ -1,17 +1,90 @@
-# Taller DOM + API REST con Node.js y Express
+# API REST de Tareas y Contactos con Node.js, Express y SQLite
 
 **Autor:** Samir Rosero
-**Asignatura:** Electiva – Desarrollo de Aplicaciones Web
+**Asignatura:** Fundamentos Web – Grupo 611
 **Institución:** Institución Universitaria Antonio José Camacho (UNIAJC)
 
 ---
 
 ## Descripción
 
-Este repositorio integra dos aplicaciones web, una **Lista de Tareas (To-Do List)** y una **Lista de Contactos**, conectadas a una **API REST** hecha con **Node.js** y **Express**.
+API REST hecha con **Node.js** y **Express** que maneja dos recursos: **tareas** (`/tareas`) y **contactos** (`/contactos`), cada uno con los métodos **GET, POST, PUT y DELETE**.
 
-- El **frontend** (HTML, CSS y JavaScript sin frameworks) arma la interfaz manipulando el **DOM** y usa `fetch` para hablar con la API.
-- El **backend** expone los métodos HTTP **GET, POST, PUT y DELETE** para cada recurso. También sirve los archivos del frontend, así que todo corre desde un solo servidor.
+- El código está organizado en **rutas, controladores y modelos**.
+- Los datos se guardan en una base de datos **SQLite** (`data/app.db`), así que **no se pierden al reiniciar el servidor**.
+- El mismo servidor muestra un **frontend** (HTML, CSS y JavaScript con manipulación del DOM) que consume la API: una lista de tareas y una lista de contactos.
+
+---
+
+## Cómo ejecutarlo
+
+**Requisito:** Node.js **22.13 o superior** (trae SQLite incorporado). Revisa con `node -v`.
+
+```bash
+npm install      # instala las dependencias
+npm start        # inicia la API en http://localhost:3000
+npm run dev      # igual, pero nodemon reinicia el servidor al guardar cambios
+npm test         # corre las pruebas automáticas (detén antes npm start / npm run dev)
+npm run sql      # ejecuta la práctica de SQL (docs/sql/practica.sql)
+```
+
+Con el servidor corriendo:
+
+| Qué | URL |
+| --- | --- |
+| Lista de tareas (frontend) | <http://localhost:3000> |
+| Lista de contactos (frontend) | <http://localhost:3000/contactos.html> |
+| API de tareas | <http://localhost:3000/tareas> |
+| API de contactos | <http://localhost:3000/contactos> |
+
+- La base de datos se crea sola en `data/app.db` la primera vez, con 3 tareas y 3 contactos de ejemplo. **No se sube a GitHub** (está en `.gitignore`).
+- Para empezar con la base de datos limpia: detén el servidor y borra la carpeta `data/`.
+- `npm test` crea datos de prueba en la base de datos. Para no mezclarlos con los tuyos, puedes usar otro archivo con la variable `DB_ARCHIVO` (por ejemplo, en Git Bash: `DB_ARCHIVO=data/pruebas.db npm test`).
+
+---
+
+## Endpoints
+
+Todas las respuestas son JSON. Los errores siempre tienen la forma `{ "error": "mensaje" }`.
+
+### Tareas: `/tareas`
+
+Recurso: `{ "id": 1, "titulo": "Aprender Express", "fecha": "2026-11-25", "completada": false }`
+
+| Método | Ruta | Qué hace | Respuesta OK | Errores |
+| --- | --- | --- | --- | --- |
+| `GET` | `/tareas` | Lista todas las tareas | `200` + arreglo | — |
+| `GET` | `/tareas/:id` | Obtiene una tarea por id | `200` + objeto | `404` |
+| `POST` | `/tareas` | Crea una tarea | `201` + tarea creada | `400` si falta `titulo` o no es texto, o la `fecha` no es `AAAA-MM-DD` |
+| `PUT` | `/tareas/:id` | Actualiza `titulo`, `fecha` y/o `completada` (solo lo que se envía) | `200` + tarea actualizada | `400` si `completada` no es booleano o `titulo` está vacío · `404` |
+| `DELETE` | `/tareas/:id` | Elimina una tarea | `204` sin cuerpo | `404` |
+
+### Contactos: `/contactos`
+
+Recurso: `{ "id": 1, "nombre": "Ana", "apellido": "Gómez", "telefono": "3001234567", "email": "ana@correo.com", "ciudad": "Cali" }`
+
+| Método | Ruta | Qué hace | Respuesta OK | Errores |
+| --- | --- | --- | --- | --- |
+| `GET` | `/contactos` | Lista todos los contactos | `200` + arreglo | — |
+| `GET` | `/contactos/:id` | Obtiene un contacto por id | `200` + objeto | `404` |
+| `POST` | `/contactos` | Crea un contacto | `201` + contacto creado | `400` (dice qué campo falla) |
+| `PUT` | `/contactos/:id` | Actualiza los campos que se envían | `200` + contacto actualizado | `400` · `404` |
+| `DELETE` | `/contactos/:id` | Elimina un contacto | `204` sin cuerpo | `404` |
+
+**Validaciones de contactos:** `nombre` y `telefono` son obligatorios; `telefono` debe tener solo dígitos, entre 7 y 10; `email` es opcional, pero si viene debe contener `@`; `apellido` y `ciudad` son opcionales. El `id` lo genera la base de datos: si el cliente lo envía, se ignora.
+
+### Otros casos
+
+| Caso | Respuesta |
+| --- | --- |
+| Ruta que no existe (`GET /no-existe`) | `404` `{ "error": "No existe la ruta GET /no-existe" }` |
+| `POST`/`PUT` sin body | `400`, nunca `500` |
+| JSON mal escrito en el body | `400` |
+| Id que no es número (`/tareas/1abc`) | `404` |
+
+### Probar la API
+
+[`api.http`](api.http) tiene **36 peticiones** (casos de éxito y de error para cada endpoint). Se ejecutan con la extensión **REST Client** de VS Code: inicia el servidor y pulsa *Send Request* encima de cada una.
 
 ---
 
@@ -19,142 +92,86 @@ Este repositorio integra dos aplicaciones web, una **Lista de Tareas (To-Do List
 
 ```text
 .
-├── data/                    # "Base de datos" en archivos JSON (se crea sola si no existe)
-│   ├── tareas.json
-│   └── contactos.json
-├── public/                  # Frontend (servido por Express con express.static)
-│   ├── index.html           # Vista de la Lista de Tareas
-│   ├── contactos.html       # Vista de la Lista de Contactos
-│   ├── css/
-│   │   └── styles.css       # Estilos compartidos
-│   └── js/
-│       ├── confirmar.js     # Modal de confirmación compartido
-│       ├── todo.js          # DOM + consumo de la API de tareas
-│       └── contactos.js     # DOM + consumo de la API de contactos
+├── api.http                     # Pruebas manuales de la API (REST Client)
+├── data/app.db                  # Base de datos SQLite (se crea sola, no se sube)
+├── docs/
+│   ├── modelo-datos.md          # Diseño de las tablas
+│   ├── respuestas.md            # Respuestas a las preguntas de la Parte 1
+│   ├── sql/practica.sql         # Práctica de SQL (npm run sql)
+│   └── ...                      # Guías del curso
+├── public/                      # Frontend servido por Express
+│   ├── index.html               # Lista de tareas
+│   ├── contactos.html           # Lista de contactos
+│   ├── css/styles.css
+│   └── js/                      # todo.js, contactos.js, confirmar.js (modal)
 ├── src/
-│   └── server.js            # Servidor Express con las rutas CRUD
-├── .gitignore               # Excluye node_modules
-├── package.json             # Dependencias y scripts
-└── README.md
+│   ├── server.js                # Crea la app, middlewares, monta las rutas
+│   ├── routes/                  # Verbo + URL → función del controlador
+│   ├── controllers/             # Leen req, validan, eligen el código de estado
+│   ├── models/                  # Único lugar que lee y escribe los datos (SQL)
+│   └── db/
+│       ├── schema.sql           # CREATE TABLE de tareas y contactos
+│       └── connection.js        # Abre la base de datos y crea las tablas
+└── tests/                       # Pruebas automáticas del curso (npm test)
 ```
 
----
-
-## Cómo ejecutarlo
-
-Requisitos: [Node.js](https://nodejs.org/) 18 o superior.
-
-```bash
-# 1. Clonar el repositorio
-git clone <url-de-este-repositorio>
-cd <carpeta-del-repositorio>
-
-# 2. Instalar dependencias
-npm install
-
-# 3. Iniciar el servidor
-npm start        # modo normal
-npm run dev      # modo desarrollo: nodemon reinicia el servidor al guardar cambios
-```
-
-Luego abre en el navegador:
-
-- Lista de tareas: <http://localhost:3000>
-- Lista de contactos: <http://localhost:3000/contactos.html>
-
-> Los datos se guardan en los archivos `data/tareas.json` y `data/contactos.json`, así que **no se pierden al reiniciar el servidor**. Si borras esos archivos, el servidor los vuelve a crear con datos de ejemplo.
-
----
-
-## Endpoints de la API
-
-### Tareas: `/api/tareas`
-
-| Método | Ruta               | Descripción                    | Cuerpo (JSON)                                   | Respuesta |
-|--------|--------------------|--------------------------------|-------------------------------------------------|-----------|
-| GET    | `/api/tareas`      | Lista todas las tareas         | —                                               | `200`     |
-| GET    | `/api/tareas/:id`  | Obtiene una tarea              | —                                               | `200` / `404` |
-| POST   | `/api/tareas`      | Crea una tarea                 | `{ "titulo": "Estudiar", "fecha": "2026-11-25" }` | `201` / `400` |
-| PUT    | `/api/tareas/:id`  | Actualiza título, fecha o estado | `{ "titulo"?, "fecha"?, "completada"? }`      | `200` / `400` / `404` |
-| DELETE | `/api/tareas/:id`  | Elimina una tarea              | —                                               | `204` / `404` |
-
-### Contactos: `/api/contactos`
-
-| Método | Ruta                  | Descripción              | Cuerpo (JSON)                                                         | Respuesta |
-|--------|-----------------------|--------------------------|-----------------------------------------------------------------------|-----------|
-| GET    | `/api/contactos`      | Lista todos los contactos | —                                                                    | `200`     |
-| GET    | `/api/contactos/:id`  | Obtiene un contacto      | —                                                                     | `200` / `404` |
-| POST   | `/api/contactos`      | Crea un contacto         | `{ "nombre", "apellido", "telefono", "ciudad" }` (todos obligatorios) | `201` / `400` |
-| PUT    | `/api/contactos/:id`  | Actualiza un contacto    | Cualquiera de los campos anteriores                                   | `200` / `400` / `404` |
-| DELETE | `/api/contactos/:id`  | Elimina un contacto      | —                                                                     | `204` / `404` |
-
-### Ejemplos con `curl`
-
-```bash
-# Crear una tarea
-curl -X POST http://localhost:3000/api/tareas \
-  -H "Content-Type: application/json" \
-  -d '{"titulo":"Repasar Express","fecha":"2026-11-30"}'
-
-# Marcarla como completada
-curl -X PUT http://localhost:3000/api/tareas/4 \
-  -H "Content-Type: application/json" \
-  -d '{"completada":true}'
-
-# Eliminarla
-curl -X DELETE http://localhost:3000/api/tareas/4
-```
-
-También se pueden probar con Postman, Thunder Client o la extensión REST Client de VS Code.
-
----
-
-## Funcionalidades
-
-**Lista de tareas**
-- Agregar tareas con fecha opcional (POST).
-- Marcar o desmarcar como completada con el checkbox (PUT).
-- Editar el título y la fecha directamente en la lista (PUT). `Enter` guarda y `Esc` cancela.
-- Eliminar tareas (DELETE).
-
-**Lista de contactos**
-- Registrar contactos con nombre, apellido, teléfono y ciudad (POST).
-- Editar un contacto: sus datos se cargan en el mismo formulario (PUT).
-- Eliminar contactos (DELETE).
-
-**Ambas**
-- Se cargan desde la API al abrir la página (GET).
-- Validación de campos en el cliente y en el servidor, con mensajes de error en pantalla.
-- Navegación entre las dos listas con una barra superior.
-- Modal de confirmación antes de eliminar (elemento `<dialog>`, en `public/js/confirmar.js`). Se cierra con **Cancelar**, con `Esc` o haciendo clic fuera de la caja.
+**Flujo de una petición:** `Ruta → Controlador → Modelo → SQLite`. Gracias a esta separación, para pasar de archivos JSON a SQLite **solo se reescribieron los modelos**; rutas y controladores no cambiaron.
 
 ---
 
 ## Aprendizajes
 
-1. **Cómo funciona una API REST.** Cada recurso (`tareas`, `contactos`) tiene una URL, y el método HTTP indica la acción: GET lee, POST crea, PUT actualiza y DELETE elimina.
-2. **Express y middlewares.** `express.json()` convierte el cuerpo de la petición en un objeto (`req.body`), y `express.static()` sirve el HTML, CSS y JS sin escribir una ruta para cada archivo.
-3. **Parámetros de ruta.** `req.params.id` llega como texto, así que hay que convertirlo a número (`Number(...)`) antes de compararlo con los ids guardados.
-4. **Códigos de estado HTTP.** Responder con el código correcto (`201` creado, `204` sin contenido, `400` datos inválidos, `404` no encontrado) le permite al cliente saber qué pasó sin adivinar.
-5. **Validar en los dos lados.** La validación del frontend mejora la experiencia, pero el servidor también debe validar, porque cualquiera puede llamar a la API directamente con `curl` o Postman.
-6. **Manipulación del DOM.** Crear elementos con `document.createElement`, armarlos con `append` y volver a dibujar la lista (`render()`) cada vez que cambian los datos.
-7. **Seguridad básica (XSS).** Usar `textContent` en lugar de `innerHTML` para mostrar lo que escribe el usuario evita que se inyecte HTML o scripts en la página.
-8. **`fetch` y `async/await`.** Las peticiones son asíncronas, y `try/catch` permite mostrar un mensaje si la API falla o el servidor está apagado.
-9. **Mismo origen y CORS.** Si Express sirve el frontend, la página y la API comparten origen (`localhost:3000`), así que no hace falta configurar CORS y las URLs pueden ser relativas (`/api/tareas`).
-10. **Persistencia con archivos JSON.** Con el módulo `fs` de Node se leen los datos al iniciar (`readFileSync` + `JSON.parse`) y se guardan después de cada cambio (`JSON.stringify` + `writeFileSync`). Así los datos sobreviven a un reinicio sin necesitar una base de datos.
-11. **Herramientas de desarrollo.** `nodemon` reinicia el servidor al guardar cambios (configurado para ignorar la carpeta `data/`, si no se reiniciaría cada vez que la API guarda), los scripts de `package.json` estandarizan cómo se ejecuta el proyecto y `.gitignore` evita subir `node_modules`.
+### Qué aprendí
+
+1. **REST:** cada recurso tiene una URL en plural (`/tareas`) y el verbo HTTP dice la acción. El verbo nunca va en la URL (`/borrarTarea` está mal).
+2. **Códigos de estado:** `201` al crear, `204` al eliminar (sin cuerpo), `400` cuando el cliente manda datos inválidos, `404` cuando no existe. Un `500` solo debería salir por un error de mi código, nunca por datos mal enviados.
+3. **Rutas, controladores y modelos:** cada capa tiene un solo trabajo. Lo comprobé en la práctica: al conectar SQLite no toqué ni una línea de los controladores.
+4. **SQL básico:** `CREATE TABLE`, `INSERT`, `SELECT` con `WHERE` y `ORDER BY`, `UPDATE`, `DELETE` y `COUNT(*)`. `UPDATE` y `DELETE` siempre llevan `WHERE`.
+5. **Inyección SQL:** nunca pegar en el SQL texto que viene del usuario; siempre usar `?`. Probé `DELETE /tareas/1 OR 1=1` y no borró nada.
+6. **Validar en el servidor y en la base de datos:** el controlador responde `400` con un mensaje claro, y `NOT NULL` en la tabla es una última protección.
+7. **Manipulación del DOM:** crear elementos con `createElement`, usar `textContent` en lugar de `innerHTML` para evitar XSS y volver a dibujar la lista cuando cambian los datos.
+8. **Pruebas:** `npm test` revisa la API automáticamente, y `api.http` documenta los casos que pruebo a mano.
+
+### Qué se me dificultó y cómo lo resolví
+
+| Dificultad | Cómo la resolví |
+| --- | --- |
+| Al traer las pruebas del curso, fallaban las 27 | Mi API usaba rutas `/api/tareas` y las pruebas esperan `/tareas`. Cambié las rutas (y las URLs del frontend) y fui completando parte por parte hasta que todas pasaron. |
+| Los contactos no cumplían la guía | Tenían todos los campos obligatorios y no había `email`. Ajusté las validaciones: solo `nombre` y `telefono` obligatorios, teléfono de 7 a 10 dígitos y `email` con `@`. |
+| Un teléfono válido salía como inválido | La expresión regular había quedado como `d{7,10}` en lugar de `\d{7,10}` (se perdió la barra invertida). Las pruebas automáticas lo detectaron y lo corregí. |
+| SQLite no tiene booleanos | El modelo convierte `true`/`false` a `1`/`0` al guardar y al revés al leer, para que la API siga respondiendo booleanos. |
+| `npm test` llenaba mi base de datos con datos de prueba | Agregué la variable `DB_ARCHIVO` para usar otro archivo de base de datos al probar. |
+| nodemon reiniciaba el servidor cada vez que la API guardaba datos | Configuré `nodemonConfig.ignore` en `package.json` para que no vigile `data/` ni `public/`. |
+| Los botones al editar una tarea se veían amontonados en el celular | Cambié la fila en modo edición a columna (campos arriba, botones abajo) y usé CSS Grid para los campos. |
 
 ---
 
-## Uso de Inteligencia Artificial
+## Uso de IA
 
-Durante el taller se usó **Claude (Anthropic)** como asistente de programación, a través de la extensión Claude Code en VS Code. Se usó para:
+**Herramienta:** **Claude** (Anthropic), usado desde la extensión **Claude Code** en VS Code.
 
-- **Revisar el código base del taller** y encontrar errores. Por ejemplo: la ruta del CSS de la lista de tareas estaba mal (`css/styles.css` desde la carpeta `html/`), había un comentario inválido (`#...`) al inicio del CSS que anulaba la primera regla, faltaban los scripts `start`/`dev` en `package.json` y el DELETE respondía "eliminado" aunque el id no existiera.
-- **Reorganizar el proyecto** siguiendo la estructura del repositorio de ejemplo de la clase (`src/server.js` y scripts con `nodemon`), y servir el frontend desde Express.
-- **Agregar validaciones y códigos de estado HTTP** correctos en la API.
-- **Guardar los datos en archivos JSON** para que no se pierdan al reiniciar el servidor.
-- **Mejorar el frontend:** quitar `alert`/`prompt`, hacer la edición en la misma página, mostrar mensajes de error y reemplazar `innerHTML` por `textContent` para evitar XSS.
-- **Redactar esta documentación.**
+### Para qué la usé
 
-**Reflexión:** la IA aceleró la revisión y ayudó a detectar errores que a simple vista no se notaban. Aun así, cada cambio se revisó y se probó (cada endpoint con `curl` y cada acción de las dos páginas) para entender qué hace el código y por qué, porque la IA puede equivocarse y la responsabilidad del resultado es de quien entrega el trabajo.
+- **Revisar el código** y encontrar errores (rutas mal escritas, validaciones que faltaban, código que permitía XSS).
+- **Explicar conceptos** de las preguntas de la Parte 1 (la diferencia entre `??` y `||`, por qué `204` no lleva cuerpo, `parseInt` contra `Number`) y de la guía de base de datos (inyección SQL).
+- **Generar código** a partir de la guía del curso: la separación en rutas/controladores/modelos, la conexión a SQLite y los casos de `api.http`.
+- **Mejorar el frontend:** modal de confirmación al eliminar, diseño responsive y paleta de colores propia.
+- **Redactar la documentación** (este README, `docs/modelo-datos.md` y `docs/respuestas.md`), que después revisé.
+
+### Ejemplos de lo que le pedí
+
+- *"Que los botones de eliminar tengan un modal de confirmación."*
+- *"Cuando le dé editar, que los botones queden debajo o darle más espacio porque está montado, no tiene un buen responsive."*
+- *"Actualiza los colores y no pongas los mismos de mi compañero."*
+- *"Agrega que los datos se guarden en JSON para que no se borren al reiniciar."* (Luego lo cambiamos por SQLite para el bonus.)
+- Le pasé las instrucciones de esta entrega y la guía del docente para organizar la API en rutas, controladores y modelos, hacer el onboarding de base de datos y conectar SQLite.
+
+### Qué corregí o verifiqué
+
+- **Probé todo:** `npm test` (27 de 27 pruebas pasan), cada petición de `api.http` (36, todas con el código esperado), y la "prueba de fuego" de la guía: crear una tarea, reiniciar el servidor y comprobar que sigue ahí.
+- **Errores en el código generado:** la IA escribió las expresiones regulares del teléfono y de la fecha sin la barra invertida (`d{7,10}` en vez de `\d{7,10}`). Las pruebas fallaron con un teléfono válido y se corrigió.
+- **Diseño:** al abrir la página vi que al editar los botones quedaban amontonados y lo pedí corregir. La primera corrección dejaba espacio de más en pantallas grandes, así que se revisó con capturas en celular y en escritorio hasta que quedó bien.
+- **Seguridad:** comprobé que el intento de inyección SQL de la guía no borra datos y que el texto que escribe el usuario no se interpreta como HTML.
+- **Decisiones mías:** la paleta de colores, mantener la fecha opcional en las tareas, guardar los datos (primero en JSON y luego en SQLite) y qué incluir en este README.
+
+> La IA puede equivocarse (como pasó con las expresiones regulares), así que revisé y probé cada cambio para poder explicar el código que entrego.
