@@ -1,6 +1,6 @@
 // ===== Lista de contactos: manipulación del DOM + consumo de la API =====
-const API_URL = '/api/contactos';
-const CAMPOS = ['nombre', 'apellido', 'telefono', 'ciudad'];
+const API_URL = '/contactos';
+const CAMPOS = ['nombre', 'apellido', 'telefono', 'email', 'ciudad'];
 let contactos = [];
 let idEditando = null; // null = creando, número = editando ese contacto
 
@@ -58,7 +58,7 @@ function salirDeEdicion() {
 // Carga un contacto en el formulario para editarlo
 function entrarEnEdicion(contacto) {
   idEditando = contacto.id;
-  CAMPOS.forEach((campo) => (inputs[campo].value = contacto[campo]));
+  CAMPOS.forEach((campo) => (inputs[campo].value = contacto[campo] ?? ''));
   btnGuardar.textContent = 'Actualizar contacto';
   btnCancelar.hidden = false;
   inputs.nombre.focus();
@@ -70,8 +70,17 @@ btnCancelar.addEventListener('click', salirDeEdicion);
 form.addEventListener('submit', async (evento) => {
   evento.preventDefault();
   const datos = leerFormulario();
-  if (CAMPOS.some((campo) => datos[campo] === '')) {
-    mostrarMensaje('Por favor completa todos los campos.');
+  // Mismas reglas que valida la API (la API también las revisa)
+  if (datos.nombre === '' || datos.telefono === '') {
+    mostrarMensaje('El nombre y el teléfono son obligatorios.');
+    return;
+  }
+  if (!/^\d{7,10}$/.test(datos.telefono)) {
+    mostrarMensaje('El teléfono debe tener solo dígitos, entre 7 y 10.');
+    return;
+  }
+  if (datos.email !== '' && !datos.email.includes('@')) {
+    mostrarMensaje('El correo debe contener @.');
     return;
   }
   try {
@@ -132,7 +141,12 @@ function render() {
     const nombre = document.createElement('strong');
     nombre.textContent = `${contacto.nombre} ${contacto.apellido}`;
     const detalle = document.createElement('span');
-    detalle.textContent = `📞 ${contacto.telefono} | 📍 ${contacto.ciudad}`;
+    // Solo se muestran los datos opcionales que existan
+    detalle.textContent = [
+      `📞 ${contacto.telefono}`,
+      contacto.email && `✉️ ${contacto.email}`,
+      contacto.ciudad && `📍 ${contacto.ciudad}`
+    ].filter(Boolean).join(' | ');
     info.append(nombre, detalle);
 
     const acciones = document.createElement('div');

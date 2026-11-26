@@ -81,6 +81,7 @@ h1 {
 
 input[type="text"],
 input[type="tel"],
+input[type="email"],
 input[type="date"] {
   padding: 10px;
   border: 1px solid var(--borde);
@@ -125,6 +126,8 @@ button:hover { background-color: var(--primario-hover); }
   font-size: 14px;
   color: var(--eliminar);
 }
+
+.ayuda { color: var(--texto-suave); font-size: 13px; }
 
 .vacio { text-align: center; color: var(--texto-suave); }
 

@@ -54,8 +54,11 @@ let tareas = cargar('tareas.json', [
 let siguienteIdTarea = calcularSiguienteId(tareas);
 const guardarTareas = () => guardar('tareas.json', tareas);
 
+// Contactos de ejemplo inventados (no son personas reales)
 let contactos = cargar('contactos.json', [
-  { id: 1, nombre: 'Ana', apellido: 'Gómez', telefono: '3001234567', ciudad: 'Cali' }
+  { id: 1, nombre: 'Ana', apellido: 'Gómez', telefono: '3001234567', email: 'ana@correo.com', ciudad: 'Cali' },
+  { id: 2, nombre: 'Carlos', apellido: 'Ruiz', telefono: '3109876543', email: '', ciudad: 'Palmira' },
+  { id: 3, nombre: 'Laura', apellido: 'Mejía', telefono: '6024455667', email: 'laura@correo.com', ciudad: 'Cali' }
 ]);
 let siguienteIdContacto = calcularSiguienteId(contactos);
 const guardarContactos = () => guardar('contactos.json', contactos);
@@ -67,7 +70,7 @@ const leerId = (req) => Number(req.params.id);
 const textoValido = (valor) => typeof valor === 'string' && valor.trim() !== '';
 
 // Utilidad: la fecha es opcional; si viene debe ser "AAAA-MM-DD" o vacía
-const fechaValida = (valor) => typeof valor === 'string' && /^(d{4}-d{2}-d{2})?$/.test(valor);
+const fechaValida = (valor) => typeof valor === 'string' && /^(\d{4}-\d{2}-\d{2})?$/.test(valor);
 
 // ============================================================
 //  RUTAS: TAREAS  (/tareas)
@@ -136,55 +139,79 @@ app.delete('/tareas/:id', (req, res) => {
 });
 
 // ============================================================
-//  RUTAS: CONTACTOS  (/api/contactos)
+//  RUTAS: CONTACTOS  (/contactos)
 // ============================================================
-const CAMPOS_CONTACTO = ['nombre', 'apellido', 'telefono', 'ciudad'];
+
+// Revisa los campos de un contacto. Devuelve el mensaje de error o null.
+// esNuevo = true (POST): nombre y telefono son obligatorios.
+// esNuevo = false (PUT): solo se validan los campos que se envían.
+function validarContacto(datos, esNuevo) {
+  const { nombre, apellido, telefono, email, ciudad } = datos;
+
+  if (esNuevo && nombre === undefined) return 'Falta el campo obligatorio: nombre';
+  if (esNuevo && telefono === undefined) return 'Falta el campo obligatorio: telefono';
+
+  if (nombre !== undefined && !textoValido(nombre)) return 'nombre debe ser un texto no vacío';
+  if (telefono !== undefined && (typeof telefono !== 'string' || !/^\d{7,10}$/.test(telefono))) {
+    return 'telefono debe tener solo dígitos, entre 7 y 10';
+  }
+  if (email !== undefined && (typeof email !== 'string' || (email !== '' && !email.includes('@')))) {
+    return 'email debe contener @';
+  }
+  if (apellido !== undefined && typeof apellido !== 'string') return 'apellido debe ser texto';
+  if (ciudad !== undefined && typeof ciudad !== 'string') return 'ciudad debe ser texto';
+  return null;
+}
 
 // GET - Obtener todos los contactos
-app.get('/api/contactos', (req, res) => {
+app.get('/contactos', (req, res) => {
   res.json(contactos);
 });
 
 // GET - Obtener un contacto por id
-app.get('/api/contactos/:id', (req, res) => {
+app.get('/contactos/:id', (req, res) => {
   const contacto = contactos.find((c) => c.id === leerId(req));
   if (!contacto) return res.status(404).json({ error: 'Contacto no encontrado' });
   res.json(contacto);
 });
 
-// POST - Crear un contacto
-app.post('/api/contactos', (req, res) => {
+// POST - Crear un contacto (si el body trae un id, se ignora: lo genera el servidor)
+app.post('/contactos', (req, res) => {
   const datos = req.body ?? {};
-  const faltantes = CAMPOS_CONTACTO.filter((campo) => !textoValido(datos[campo]));
-  if (faltantes.length > 0) {
-    return res.status(400).json({ error: `Faltan campos: ${faltantes.join(', ')}` });
-  }
-  const nuevo = { id: siguienteIdContacto++ };
-  CAMPOS_CONTACTO.forEach((campo) => (nuevo[campo] = datos[campo].trim()));
+  const error = validarContacto(datos, true);
+  if (error) return res.status(400).json({ error });
+
+  const nuevo = {
+    id: siguienteIdContacto++,
+    nombre: datos.nombre.trim(),
+    apellido: datos.apellido?.trim() ?? '',
+    telefono: datos.telefono,
+    email: datos.email?.trim() ?? '',
+    ciudad: datos.ciudad?.trim() ?? ''
+  };
   contactos.push(nuevo);
   guardarContactos();
   res.status(201).json(nuevo);
 });
 
-// PUT - Actualizar un contacto
-app.put('/api/contactos/:id', (req, res) => {
+// PUT - Actualizar un contacto (solo cambia los campos que se envían)
+app.put('/contactos/:id', (req, res) => {
   const contacto = contactos.find((c) => c.id === leerId(req));
   if (!contacto) return res.status(404).json({ error: 'Contacto no encontrado' });
 
   const datos = req.body ?? {};
-  for (const campo of CAMPOS_CONTACTO) {
-    if (datos[campo] === undefined) continue;
-    if (!textoValido(datos[campo])) {
-      return res.status(400).json({ error: `El campo ${campo} no puede estar vacío` });
-    }
-    contacto[campo] = datos[campo].trim();
+  const error = validarContacto(datos, false);
+  if (error) return res.status(400).json({ error });
+
+  for (const campo of ['nombre', 'apellido', 'telefono', 'email', 'ciudad']) {
+    if (datos[campo] !== undefined) contacto[campo] = datos[campo].trim();
   }
   guardarContactos();
   res.json(contacto);
 });
 
 // DELETE - Eliminar un contacto
-app.delete('/api/contactos/:id', (req, res) => {
+app.delete('/contactos/:id', (req, res) => {
   const indice = contactos.findIndex((c) => c.id === leerId(req));
   if (indice === -1) return res.status(404).json({ error: 'Contacto no encontrado' });
   contactos.splice(indice, 1);
