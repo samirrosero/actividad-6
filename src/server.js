@@ -2,6 +2,7 @@
 //  API REST - Lista de Tareas + Lista de Contactos
 //  Node.js + Express (métodos GET, POST, PUT y DELETE)
 // ============================================================
+const fs = require('fs');
 const path = require('path');
 const express = require('express');
 
@@ -15,20 +16,49 @@ app.use(express.json());
 app.use(express.static(path.join(__dirname, '..', 'public')));
 
 // ------------------------------------------------------------
-//  "Base de datos" temporal en memoria
-//  (se reinicia cada vez que se reinicia el servidor)
+//  Persistencia en archivos JSON (carpeta /data)
+//  Los datos se leen al iniciar y se guardan después de cada
+//  POST, PUT o DELETE, así no se pierden al reiniciar el servidor.
 // ------------------------------------------------------------
-let tareas = [
+const CARPETA_DATOS = path.join(__dirname, '..', 'data');
+
+function guardar(nombreArchivo, datos) {
+  fs.mkdirSync(CARPETA_DATOS, { recursive: true });
+  fs.writeFileSync(path.join(CARPETA_DATOS, nombreArchivo), JSON.stringify(datos, null, 2));
+}
+
+// Lee un archivo JSON; si no existe, lo crea con los datos iniciales
+function cargar(nombreArchivo, datosIniciales) {
+  const ruta = path.join(CARPETA_DATOS, nombreArchivo);
+  if (!fs.existsSync(ruta)) {
+    guardar(nombreArchivo, datosIniciales);
+    return datosIniciales;
+  }
+  try {
+    return JSON.parse(fs.readFileSync(ruta, 'utf8'));
+  } catch (error) {
+    // No se sobrescribe el archivo para no perder datos: hay que corregirlo a mano
+    console.error(`El archivo data/${nombreArchivo} no tiene un JSON válido: ${error.message}`);
+    process.exit(1);
+  }
+}
+
+// El siguiente id es el mayor id guardado + 1
+const calcularSiguienteId = (lista) => lista.reduce((max, item) => Math.max(max, item.id), 0) + 1;
+
+let tareas = cargar('tareas.json', [
   { id: 1, titulo: 'Aprender Express', fecha: '2026-11-25', completada: false },
   { id: 2, titulo: 'Crear una API REST', fecha: '2026-11-25', completada: true },
   { id: 3, titulo: 'Subir el taller a GitHub', fecha: '', completada: false }
-];
-let siguienteIdTarea = 4;
+]);
+let siguienteIdTarea = calcularSiguienteId(tareas);
+const guardarTareas = () => guardar('tareas.json', tareas);
 
-let contactos = [
+let contactos = cargar('contactos.json', [
   { id: 1, nombre: 'Ana', apellido: 'Gómez', telefono: '3001234567', ciudad: 'Cali' }
-];
-let siguienteIdContacto = 2;
+]);
+let siguienteIdContacto = calcularSiguienteId(contactos);
+const guardarContactos = () => guardar('contactos.json', contactos);
 
 // Utilidad: convierte el :id de la URL a número
 const leerId = (req) => Number(req.params.id);
@@ -65,6 +95,7 @@ app.post('/api/tareas', (req, res) => {
     completada: false
   };
   tareas.push(nueva);
+  guardarTareas();
   res.status(201).json(nueva);
 });
 
@@ -81,6 +112,7 @@ app.put('/api/tareas/:id', (req, res) => {
   if (fecha !== undefined) tarea.fecha = String(fecha);
   if (completada !== undefined) tarea.completada = Boolean(completada);
 
+  guardarTareas();
   res.json(tarea);
 });
 
@@ -89,6 +121,7 @@ app.delete('/api/tareas/:id', (req, res) => {
   const indice = tareas.findIndex((t) => t.id === leerId(req));
   if (indice === -1) return res.status(404).json({ error: 'Tarea no encontrada' });
   tareas.splice(indice, 1);
+  guardarTareas();
   res.status(204).send();
 });
 
@@ -119,6 +152,7 @@ app.post('/api/contactos', (req, res) => {
   const nuevo = { id: siguienteIdContacto++ };
   CAMPOS_CONTACTO.forEach((campo) => (nuevo[campo] = datos[campo].trim()));
   contactos.push(nuevo);
+  guardarContactos();
   res.status(201).json(nuevo);
 });
 
@@ -135,6 +169,7 @@ app.put('/api/contactos/:id', (req, res) => {
     }
     contacto[campo] = datos[campo].trim();
   }
+  guardarContactos();
   res.json(contacto);
 });
 
@@ -143,6 +178,7 @@ app.delete('/api/contactos/:id', (req, res) => {
   const indice = contactos.findIndex((c) => c.id === leerId(req));
   if (indice === -1) return res.status(404).json({ error: 'Contacto no encontrado' });
   contactos.splice(indice, 1);
+  guardarContactos();
   res.status(204).send();
 });
 

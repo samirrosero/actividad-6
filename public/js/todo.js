@@ -67,10 +67,12 @@ async function actualizarTarea(id, cambios) {
   }
 }
 
-// DELETE: eliminar tarea
-async function eliminarTarea(id) {
+// DELETE: eliminar tarea (pide confirmación con el modal)
+async function eliminarTarea(tarea) {
+  const confirmado = await confirmar(`¿Eliminar la tarea "${tarea.titulo}"?`);
+  if (!confirmado) return;
   try {
-    await pedir(`${API_URL}/${id}`, { method: 'DELETE' });
+    await pedir(`${API_URL}/${tarea.id}`, { method: 'DELETE' });
     cargarTareas();
   } catch (error) {
     mostrarMensaje(error.message);
@@ -90,6 +92,7 @@ function crearBoton(texto, clase, accion) {
 // Cambia una fila al modo edición (inputs en lugar de texto)
 function modoEdicion(elemento, tarea) {
   elemento.innerHTML = '';
+  elemento.classList.add('editando'); // el CSS pone los botones debajo de los campos
 
   const info = document.createElement('div');
   info.className = 'todo-info';
@@ -161,7 +164,7 @@ function render() {
     acciones.className = 'actions';
     acciones.append(
       crearBoton('Editar', 'btn-edit', () => modoEdicion(elemento, tarea)),
-      crearBoton('Eliminar', 'btn-delete', () => eliminarTarea(tarea.id))
+      crearBoton('Eliminar', 'btn-delete', () => eliminarTarea(tarea))
     );
 
     elemento.append(info, acciones);

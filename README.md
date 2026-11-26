@@ -1,6 +1,6 @@
 # Taller DOM + API REST con Node.js y Express
 
-**Autor:** _[Tu nombre completo]_
+**Autor:** Samir Rosero
 **Asignatura:** Electiva – Desarrollo de Aplicaciones Web
 **Institución:** Institución Universitaria Antonio José Camacho (UNIAJC)
 
@@ -19,12 +19,16 @@ Este repositorio integra dos aplicaciones web, una **Lista de Tareas (To-Do List
 
 ```text
 .
+├── data/                    # "Base de datos" en archivos JSON (se crea sola si no existe)
+│   ├── tareas.json
+│   └── contactos.json
 ├── public/                  # Frontend (servido por Express con express.static)
 │   ├── index.html           # Vista de la Lista de Tareas
 │   ├── contactos.html       # Vista de la Lista de Contactos
 │   ├── css/
 │   │   └── styles.css       # Estilos compartidos
 │   └── js/
+│       ├── confirmar.js     # Modal de confirmación compartido
 │       ├── todo.js          # DOM + consumo de la API de tareas
 │       └── contactos.js     # DOM + consumo de la API de contactos
 ├── src/
@@ -58,7 +62,7 @@ Luego abre en el navegador:
 - Lista de tareas: <http://localhost:3000>
 - Lista de contactos: <http://localhost:3000/contactos.html>
 
-> Los datos se guardan **en memoria**, así que se reinician cada vez que se reinicia el servidor.
+> Los datos se guardan en los archivos `data/tareas.json` y `data/contactos.json`, así que **no se pierden al reiniciar el servidor**. Si borras esos archivos, el servidor los vuelve a crear con datos de ejemplo.
 
 ---
 
@@ -122,6 +126,7 @@ También se pueden probar con Postman, Thunder Client o la extensión REST Clien
 - Se cargan desde la API al abrir la página (GET).
 - Validación de campos en el cliente y en el servidor, con mensajes de error en pantalla.
 - Navegación entre las dos listas con una barra superior.
+- Modal de confirmación antes de eliminar (elemento `<dialog>`, en `public/js/confirmar.js`). Se cierra con **Cancelar**, con `Esc` o haciendo clic fuera de la caja.
 
 ---
 
@@ -136,7 +141,8 @@ También se pueden probar con Postman, Thunder Client o la extensión REST Clien
 7. **Seguridad básica (XSS).** Usar `textContent` en lugar de `innerHTML` para mostrar lo que escribe el usuario evita que se inyecte HTML o scripts en la página.
 8. **`fetch` y `async/await`.** Las peticiones son asíncronas, y `try/catch` permite mostrar un mensaje si la API falla o el servidor está apagado.
 9. **Mismo origen y CORS.** Si Express sirve el frontend, la página y la API comparten origen (`localhost:3000`), así que no hace falta configurar CORS y las URLs pueden ser relativas (`/api/tareas`).
-10. **Herramientas de desarrollo.** `nodemon` reinicia el servidor al guardar cambios, los scripts de `package.json` estandarizan cómo se ejecuta el proyecto y `.gitignore` evita subir `node_modules`.
+10. **Persistencia con archivos JSON.** Con el módulo `fs` de Node se leen los datos al iniciar (`readFileSync` + `JSON.parse`) y se guardan después de cada cambio (`JSON.stringify` + `writeFileSync`). Así los datos sobreviven a un reinicio sin necesitar una base de datos.
+11. **Herramientas de desarrollo.** `nodemon` reinicia el servidor al guardar cambios (configurado para ignorar la carpeta `data/`, si no se reiniciaría cada vez que la API guarda), los scripts de `package.json` estandarizan cómo se ejecuta el proyecto y `.gitignore` evita subir `node_modules`.
 
 ---
 
@@ -147,6 +153,7 @@ Durante el taller se usó **Claude (Anthropic)** como asistente de programación
 - **Revisar el código base del taller** y encontrar errores. Por ejemplo: la ruta del CSS de la lista de tareas estaba mal (`css/styles.css` desde la carpeta `html/`), había un comentario inválido (`#...`) al inicio del CSS que anulaba la primera regla, faltaban los scripts `start`/`dev` en `package.json` y el DELETE respondía "eliminado" aunque el id no existiera.
 - **Reorganizar el proyecto** siguiendo la estructura del repositorio de ejemplo de la clase (`src/server.js` y scripts con `nodemon`), y servir el frontend desde Express.
 - **Agregar validaciones y códigos de estado HTTP** correctos en la API.
+- **Guardar los datos en archivos JSON** para que no se pierdan al reiniciar el servidor.
 - **Mejorar el frontend:** quitar `alert`/`prompt`, hacer la edición en la misma página, mostrar mensajes de error y reemplazar `innerHTML` por `textContent` para evitar XSS.
 - **Redactar esta documentación.**
 

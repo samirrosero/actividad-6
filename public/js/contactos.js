@@ -87,11 +87,15 @@ form.addEventListener('submit', async (evento) => {
   }
 });
 
-// DELETE: eliminar contacto
-async function eliminarContacto(id) {
+// DELETE: eliminar contacto (pide confirmación con el modal)
+async function eliminarContacto(contacto) {
+  const confirmado = await confirmar(
+    `¿Eliminar a ${contacto.nombre} ${contacto.apellido} de tus contactos?`
+  );
+  if (!confirmado) return;
   try {
-    await pedir(`${API_URL}/${id}`, { method: 'DELETE' });
-    if (idEditando === id) salirDeEdicion();
+    await pedir(`${API_URL}/${contacto.id}`, { method: 'DELETE' });
+    if (idEditando === contacto.id) salirDeEdicion();
     cargarContactos();
   } catch (error) {
     mostrarMensaje(error.message);
@@ -135,7 +139,7 @@ function render() {
     acciones.className = 'actions';
     acciones.append(
       crearBoton('Editar', 'btn-edit', () => entrarEnEdicion(contacto)),
-      crearBoton('Eliminar', 'btn-delete', () => eliminarContacto(contacto.id))
+      crearBoton('Eliminar', 'btn-delete', () => eliminarContacto(contacto))
     );
 
     tarjeta.append(info, acciones);

@@ -1,4 +1,27 @@
 /* ===== Estilos compartidos: Tareas + Contactos ===== */
+
+/* Paleta de colores (se cambian aquí y se aplican en todo el sitio) */
+:root {
+  --fondo: #eef2f7;
+  --superficie: #ffffff;
+  --superficie-suave: #f8fafc;
+  --texto: #1e293b;
+  --texto-suave: #64748b;
+  --borde: #dbe2ea;
+
+  --nav: #1e1b4b;
+  --nav-texto: #c7d2fe;
+
+  --primario: #4f46e5;
+  --primario-hover: #4338ca;
+  --editar: #0891b2;
+  --editar-hover: #0e7490;
+  --eliminar: #e11d48;
+  --eliminar-hover: #be123c;
+  --neutro: #64748b;
+  --neutro-hover: #475569;
+}
+
 * {
   box-sizing: border-box;
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -7,8 +30,8 @@
 body {
   margin: 0;
   min-height: 100vh;
-  background-color: #f4f7f6;
-  color: #333;
+  background-color: var(--fondo);
+  color: var(--texto);
 }
 
 /* Barra de navegación entre las dos listas */
@@ -17,26 +40,26 @@ body {
   justify-content: center;
   gap: 8px;
   padding: 14px 16px;
-  background: #222;
+  background: var(--nav);
 }
 
 .navbar a {
-  color: #ddd;
+  color: var(--nav-texto);
   text-decoration: none;
   font-weight: 600;
   padding: 8px 14px;
   border-radius: 6px;
 }
 
-.navbar a:hover { background: #3a3a3a; color: #fff; }
-.navbar a.activo { background: #fff; color: #222; }
+.navbar a:hover { background: rgba(255, 255, 255, 0.1); color: #fff; }
+.navbar a.activo { background: var(--primario); color: #fff; }
 
 .container {
-  background: #fff;
+  background: var(--superficie);
   margin: 40px auto;
   padding: 25px;
-  border-radius: 10px;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  border-radius: 12px;
+  box-shadow: 0 6px 20px rgba(30, 27, 75, 0.08);
   width: calc(100% - 32px);
   max-width: 520px;
 }
@@ -44,6 +67,7 @@ body {
 h1 {
   text-align: center;
   margin-top: 0;
+  color: var(--nav);
 }
 
 .input-group {
@@ -59,82 +83,149 @@ input[type="text"],
 input[type="tel"],
 input[type="date"] {
   padding: 10px;
-  border: 1px solid #ccc;
-  border-radius: 5px;
+  border: 1px solid var(--borde);
+  border-radius: 6px;
   font-size: 15px;
+  color: var(--texto);
+  background: var(--superficie);
 }
+
+input:focus {
+  outline: none;
+  border-color: var(--primario);
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.2);
+}
+
+input[type="checkbox"] { accent-color: var(--primario); width: 16px; height: 16px; }
 
 .input-group input[type="text"] { flex: 1; min-width: 160px; }
 
 button {
   padding: 10px 15px;
-  background-color: #28a745;
+  background-color: var(--primario);
   color: #fff;
   border: none;
-  border-radius: 5px;
+  border-radius: 6px;
   cursor: pointer;
   font-weight: bold;
 }
 
-button:hover { background-color: #218838; }
+button:hover { background-color: var(--primario-hover); }
 
-.btn-edit { background-color: #ffc107; color: #000; }
-.btn-edit:hover { background-color: #e0a800; }
-.btn-delete { background-color: #dc3545; }
-.btn-delete:hover { background-color: #b02a37; }
-.btn-secondary { background-color: #6c757d; }
-.btn-secondary:hover { background-color: #5a6268; }
+.btn-edit { background-color: var(--editar); }
+.btn-edit:hover { background-color: var(--editar-hover); }
+.btn-delete { background-color: var(--eliminar); }
+.btn-delete:hover { background-color: var(--eliminar-hover); }
+.btn-secondary { background-color: var(--neutro); }
+.btn-secondary:hover { background-color: var(--neutro-hover); }
 
 .mensaje {
   min-height: 1.2em;
   margin: -10px 0 12px;
   font-size: 14px;
-  color: #dc3545;
+  color: var(--eliminar);
 }
 
-.vacio { text-align: center; color: #888; }
+.vacio { text-align: center; color: var(--texto-suave); }
+
+/* ===== Modal de confirmación ===== */
+.modal {
+  border: none;
+  border-radius: 12px;
+  padding: 0;
+  width: calc(100% - 32px);
+  max-width: 380px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+}
+
+.modal::backdrop { background: rgba(30, 27, 75, 0.55); }
+
+.modal-contenido { padding: 22px; }
+.modal h2 { margin: 0 0 8px; font-size: 18px; color: var(--texto); }
+.modal-texto { margin: 0 0 20px; color: var(--texto-suave); overflow-wrap: anywhere; }
+
+.modal-acciones {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
 
 /* ===== Lista de tareas ===== */
 .todo-item {
   display: flex;
+  flex-wrap: wrap; /* si no cabe, los botones bajan a otra línea */
   justify-content: space-between;
   align-items: center;
   gap: 8px;
   padding: 10px;
-  border-bottom: 1px solid #eee;
+  border-bottom: 1px solid var(--borde);
 }
 
 .todo-info {
   display: flex;
   align-items: center;
   gap: 8px;
-  flex: 1;
+  flex: 1 1 220px;
   min-width: 0;
 }
 
 .todo-info span { overflow-wrap: anywhere; }
-.todo-fecha { color: #888; font-size: 13px; white-space: nowrap; }
+.todo-fecha { color: var(--texto-suave); font-size: 13px; white-space: nowrap; }
 
 .completed {
   text-decoration: line-through;
-  color: #888;
+  color: var(--texto-suave);
 }
 
-.actions { display: flex; gap: 5px; }
+.actions { display: flex; gap: 5px; margin-left: auto; }
 .actions button { padding: 5px 8px; font-size: 12px; }
+
+/* Fila en modo edición: campos arriba, botones abajo a la derecha */
+.todo-item.editando {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 10px;
+  padding: 12px;
+  margin: 6px 0;
+  background: var(--superficie-suave);
+  border: 1px solid var(--borde);
+  border-radius: 8px;
+}
+
+.todo-item.editando .todo-info {
+  display: grid;
+  grid-template-columns: 1fr auto; /* título ancho + fecha */
+  flex: none;
+}
+.todo-item.editando input { min-width: 0; }
+.todo-item.editando .actions { justify-content: flex-end; }
+.todo-item.editando .actions button { padding: 8px 14px; font-size: 14px; }
 
 /* ===== Lista de contactos ===== */
 .contact-card {
   display: flex;
+  flex-wrap: wrap;
   justify-content: space-between;
   align-items: center;
   gap: 8px;
   padding: 12px 15px;
   margin-bottom: 10px;
   border-radius: 8px;
-  background: #fafafa;
-  border: 1px solid #eee;
+  background: var(--superficie-suave);
+  border: 1px solid var(--borde);
+  border-left: 4px solid var(--primario);
 }
 
 .contact-info strong { display: block; font-size: 16px; }
-.contact-info span { font-size: 13px; color: #666; }
+.contact-info span { font-size: 13px; color: var(--texto-suave); }
+
+/* ===== Pantallas pequeñas (celular) ===== */
+@media (max-width: 480px) {
+  .container { margin: 20px auto; padding: 18px; }
+  .input-group input[type="text"],
+  .input-group input[type="date"],
+  .input-group button { flex: 1 1 100%; }
+  .contact-info { flex: 1 1 100%; }
+  .todo-item.editando .todo-info { grid-template-columns: 1fr; }
+  .modal-acciones button { flex: 1; }
+}
